@@ -1,0 +1,73 @@
+---
+apiVersion: iam.services.k8s.aws/v1alpha1
+kind: Role
+metadata:
+  name: {{ include "app.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  #helm.sh/hook: pre-install,pre-upgrade
+spec:
+  name: {{ include "app.serviceAccountName" . }}
+  assumeRolePolicyDocument: |
+    {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+        "Effect": "Allow",
+        "Principal": {
+          "Federated": "arn:aws:iam::{{ .Values.ack.aws.accountID | int }}:oidc-provider/{{ .Values.ack.aws.oidc }}"
+        },
+        "Action": "sts:AssumeRoleWithWebIdentity",
+        "Condition": {
+          "StringEquals": {
+              "{{ .Values.ack.aws.oidc }}:aud": "sts.amazonaws.com",
+              "{{ .Values.ack.aws.oidc }}:sub": "system:serviceaccount:{{ .Release.Namespace }}:{{ include "app.serviceAccountName" . }}"
+            }
+          }
+        }
+      ]
+    }
+  policies:
+  - arn:aws:iam::{{ .Values.ack.aws.accountID | int }}:policy/{{ .Release.Name }}-s3-access
+  tags: {{ include "ack.defaultTags" . | nindent 4 }} 
+---
+apiVersion: iam.services.k8s.aws/v1alpha1
+kind: Policy
+metadata:
+  name: {{ .Release.Name }}-s3-access
+  namespace: {{ .Release.Namespace | quote }}
+  #helm.sh/hook: pre-install,pre-upgrade
+spec:
+  name: {{ .Release.Name }}-s3-access
+  policyDocument: |
+    {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "Action": [
+              "s3:PutObject",
+              "s3:GetObject",
+              "s3:DeleteObject",
+              "s3:ListBucket"
+          ],
+          "Resource": [
+              "arn:aws:s3:::{{ .Values.ack.aws.bucketName }}",
+              "arn:aws:s3:::{{ .Values.ack.aws.bucketName }}/*"
+          ]
+        }
+      ]
+    }
+  tags: {{ include "ack.defaultTags" . | nindent 4 }}
+---
+apiVersion: s3.services.k8s.aws/v1alpha1
+kind: Bucket
+metadata:
+  name: {{ .Values.ack.aws.bucketName }}
+  namespace: {{ .Release.Namespace | quote }}
+  #helm.sh/hook: pre-install,pre-upgrade
+spec:
+  name: {{ .Values.ack.aws.bucketName }}
+  acl: private
+  tagging:
+    tagSet: {{ include "ack.defaultTags" . | nindent 4 }}
+
