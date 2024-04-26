@@ -1,0 +1,6 @@
+# terraform
+infra/cloud/.terraform
+infra/cloud/.terraform.lock.hcl
+infra/cloud/.terraform.tfstate
+infra/cloud/terraform.tfstate
+infra/cloud/terraform.tfstate.backup
