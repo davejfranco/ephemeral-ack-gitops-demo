@@ -1,3 +1,8 @@
+# env file
+.env
+# infra
+infra/local/ack/secret.yaml
+
 # terraform
 infra/cloud/.terraform
 infra/cloud/.terraform.lock.hcl
