@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: demo-appset
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+  - git:
+      repoURL: https://github.com/davejfranco/ephemeral-ack-gitops-demo.git
+      revision: develop
+      - path: "gitops/env/**/values.yaml"
+  template:
+    metadata:
+      name: '{{.cluster.name}}-guestbook'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/davejfranco/ephemeral-ack-gitops-demo.git
+        targetRevision: develop
+        path: "helm/app"
+        helm:
+          releaseName: 'app-{{.path.basename}}-demo'
+          valuesObject:
+            replicaCount: '{{.replicaCount}}' 
+            image:
+              repository: '{{.image.repository}}'
+              tag: '{{image.tag}}'
+            ack:
+              enable: '{{ack.enable}}'
+      destination:  
+        server: "https://kubernetes.default.svc"
+        namespace: '{{.path.basename}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
