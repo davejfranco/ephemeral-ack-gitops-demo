@@ -1,10 +1,10 @@
+{{- if .Values.ack.enable }}
 ---
 apiVersion: iam.services.k8s.aws/v1alpha1
 kind: Role
 metadata:
-  name: {{ include "app.serviceAccountName" . }}
+  name: {{ include "app.serviceAccountName" . }}-iam-role
   namespace: {{ .Release.Namespace | quote }}
-  #helm.sh/hook: pre-install,pre-upgrade
 spec:
   name: {{ include "app.serviceAccountName" . }}
   assumeRolePolicyDocument: |
@@ -35,7 +35,6 @@ kind: Policy
 metadata:
   name: {{ .Release.Name }}-s3-access
   namespace: {{ .Release.Namespace | quote }}
-  #helm.sh/hook: pre-install,pre-upgrade
 spec:
   name: {{ .Release.Name }}-s3-access
   policyDocument: |
@@ -64,10 +63,9 @@ kind: Bucket
 metadata:
   name: {{ .Values.ack.aws.bucketName }}
   namespace: {{ .Release.Namespace | quote }}
-  #helm.sh/hook: pre-install,pre-upgrade
 spec:
   name: {{ .Values.ack.aws.bucketName }}
   acl: private
   tagging:
     tagSet: {{ include "ack.defaultTags" . | nindent 4 }}
-
+{{- end }}
