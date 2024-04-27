@@ -1,3 +1,4 @@
+---
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
@@ -10,10 +11,11 @@ spec:
   - git:
       repoURL: https://github.com/davejfranco/ephemeral-ack-gitops-demo.git
       revision: develop
+      files:
       - path: "gitops/env/**/values.yaml"
   template:
     metadata:
-      name: '{{.cluster.name}}-guestbook'
+      name: '{{.path.basename}}-demo-app'
     spec:
       project: default
       source:
@@ -26,12 +28,12 @@ spec:
             replicaCount: '{{.replicaCount}}' 
             image:
               repository: '{{.image.repository}}'
-              tag: '{{image.tag}}'
+              tag: '{{.image.tag}}'
             ack:
-              enable: '{{ack.enable}}'
+              enable: '{{.ack.enable}}'
       destination:  
         server: "https://kubernetes.default.svc"
-        namespace: '{{.path.basename}}'
+        namespace: 'eph-{{.path.basename}}-app'
       syncPolicy:
         automated:
           prune: true
